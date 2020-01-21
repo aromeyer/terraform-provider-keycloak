@@ -22,6 +22,8 @@ type User struct {
 	LastName            string              `json:"lastName"`
 	Enabled             bool                `json:"enabled"`
 	Attributes          map[string][]string `json:"attributes"`
+	RealmRoles  []string            `json:"realmRoles,omitempty"`
+	ClientRoles map[string][]string `json:"clientRoles,omitempty"`
 	FederatedIdentities FederatedIdentities `json:"federatedIdentities"`
 }
 
@@ -71,6 +73,35 @@ func (keycloakClient *KeycloakClient) GetUsers(realmId string) ([]*User, error) 
 	return users, nil
 }
 
+func (keycloakClient *KeycloakClient) GetUserRealmRoles(realmId string, userId string) ([]*Role) {
+	var UserRoles []*Role
+
+	err := keycloakClient.get(fmt.Sprintf("/realms/%s/users/%s/role-mappings/realm", realmId, userId), &UserRoles, nil)
+	if err != nil {
+		return nil
+	}
+
+	return UserRoles
+}
+
+func (keycloakClient *KeycloakClient) GetUserClientRoles(realmId string, userId string) ([]*Role) {
+	var UserRoles []*Role
+
+	var clients []*OpenidClient
+	err := keycloakClient.get(fmt.Sprintf("/realms/clients", realmId), &clients	, nil)
+
+	for _, client := range clients {
+		var user_roles []*Role
+		err = keycloakClient.get(fmt.Sprintf("/realms/%s/users/%s/role-mappings/clients/%s", realmId, userId, client.Id), &user_roles, nil)
+		if err != nil {
+			return nil
+		}
+		UserRoles = append(UserRoles, user_roles...)
+	}
+
+	return UserRoles
+}
+
 func (keycloakClient *KeycloakClient) GetUsersRoles(realmId string) ([]*Role, error) {
 	var roles []*Role
 	var users []*User
@@ -105,6 +136,14 @@ func (keycloakClient *KeycloakClient) GetUser(realmId, id string) (*User, error)
 	}
 
 	user.RealmId = realmId
+
+	for _, role := range keycloakClient.GetUserRealmRoles(realmId, id) {
+		user.RealmRoles = append(user.RealmRoles, role.Name)
+	}
+
+	for _, role := range keycloakClient.GetUserClientRoles(realmId, id) {
+		user.ClientRoles[role.ClientId] = append(user.ClientRoles[role.ClientId], role.Name)
+	}
 
 	return &user, nil
 }
@@ -188,4 +227,28 @@ func (keycloakClient *KeycloakClient) RemoveUsersFromGroup(realmId, groupId stri
 	}
 
 	return nil
+}
+
+func (keycloakClient *KeycloakClient) AddRealmRolesToUser(realmId, userId string, roles []*Role) error {
+	_, _, err := keycloakClient.post(fmt.Sprintf("/realms/%s/users/%s/role-mappings/realm", realmId, userId), roles)
+
+	return err
+}
+
+func (keycloakClient *KeycloakClient) AddClientRolesToUser(realmId, userId, clientId string, roles []*Role) error {
+	_, _, err := keycloakClient.post(fmt.Sprintf("/realms/%s/users/%s/role-mappings/clients/%s", realmId, userId, clientId), roles)
+
+	return err
+}
+
+func (keycloakClient *KeycloakClient) RemoveRealmRolesFromUser(realmId, userId string, roles []*Role) error {
+	err := keycloakClient.delete(fmt.Sprintf("/realms/%s/users/%s/role-mappings/realm", realmId, userId), roles)
+
+	return err
+}
+
+func (keycloakClient *KeycloakClient) RemoveClientRolesFromUser(realmId, userId, clientId string, roles []*Role) error {
+	err := keycloakClient.delete(fmt.Sprintf("/realms/%s/users/%s/role-mappings/clients/%s", realmId, userId, clientId), roles)
+
+	return err
 }

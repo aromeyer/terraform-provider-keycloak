@@ -2,9 +2,9 @@ package provider
 
 import (
 	"fmt"
-	"log"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/mrparkers/terraform-provider-keycloak/keycloak"
+	"log"
 	"strings"
 )
 
@@ -235,7 +235,6 @@ func resourceKeycloakUserRolesRead(data *schema.ResourceData, meta interface{}) 
 }
 
 func resourceKeycloakUserRolesUpdate(data *schema.ResourceData, meta interface{}) error {
-	log.Println("=================================\n")
 	keycloakClient := meta.(*keycloak.KeycloakClient)
 
 	realmId := data.Get("realm_id").(string)
@@ -249,7 +248,7 @@ func resourceKeycloakUserRolesUpdate(data *schema.ResourceData, meta interface{}
 	roleIds := interfaceSliceToStringSlice(data.Get("role_ids").(*schema.Set).List())
 
 	tfRoles, err := getMapOfRealmAndClientRoles(keycloakClient, realmId, roleIds)
-	log.Printf("tfRoles length: %d",len(tfRoles))
+	log.Printf("tfRoles length: %d", len(tfRoles))
 	if err != nil {
 		return err
 	}
@@ -258,10 +257,10 @@ func resourceKeycloakUserRolesUpdate(data *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	for key, _ := range tfRoles {
+	for key := range tfRoles {
 		log.Printf("tfRoles: %s\n", key)
 	}
- 	removeDuplicateRoles(&tfRoles, &remoteRoles)
+	removeDuplicateRoles(&tfRoles, &remoteRoles)
 
 	// `tfRoles` contains all roles that need to be added
 	// `remoteRoles` contains all roles that need to be removed

@@ -22,8 +22,8 @@ type User struct {
 	LastName            string              `json:"lastName"`
 	Enabled             bool                `json:"enabled"`
 	Attributes          map[string][]string `json:"attributes"`
-	RealmRoles  []string            `json:"realmRoles,omitempty"`
-	ClientRoles map[string][]string `json:"clientRoles,omitempty"`
+	RealmRoles          []string            `json:"realmRoles,omitempty"`
+	ClientRoles         map[string][]string `json:"clientRoles,omitempty"`
 	FederatedIdentities FederatedIdentities `json:"federatedIdentities"`
 }
 
@@ -73,7 +73,7 @@ func (keycloakClient *KeycloakClient) GetUsers(realmId string) ([]*User, error) 
 	return users, nil
 }
 
-func (keycloakClient *KeycloakClient) GetUserRealmRoles(realmId string, userId string) ([]*Role) {
+func (keycloakClient *KeycloakClient) GetUserRealmRoles(realmId string, userId string) []*Role {
 	var UserRoles []*Role
 
 	err := keycloakClient.get(fmt.Sprintf("/realms/%s/users/%s/role-mappings/realm", realmId, userId), &UserRoles, nil)
@@ -84,11 +84,11 @@ func (keycloakClient *KeycloakClient) GetUserRealmRoles(realmId string, userId s
 	return UserRoles
 }
 
-func (keycloakClient *KeycloakClient) GetUserClientRoles(realmId string, userId string) ([]*Role) {
+func (keycloakClient *KeycloakClient) GetUserClientRoles(realmId string, userId string) []*Role {
 	var UserRoles []*Role
 
 	var clients []*OpenidClient
-	err := keycloakClient.get(fmt.Sprintf("/realms/clients", realmId), &clients	, nil)
+	err := keycloakClient.get(fmt.Sprintf("/realms/clients", realmId), &clients, nil)
 
 	for _, client := range clients {
 		var user_roles []*Role

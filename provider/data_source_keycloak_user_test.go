@@ -17,20 +17,20 @@ func TestAccKeycloakDataSourceUser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		PreCheck:     func() { testAccPreCheck(t) },
-				  CheckDestroy: testAccCheckKeycloakRoleDestroy(),
-				  Steps: []resource.TestStep{
-					  {
-						  Config: testDataSourceKeycloakUser_basic(realm, Username),
-				  Check: resource.ComposeTestCheckFunc(
-					  testAccCheckKeycloakUserExists("keycloak_user.user"),
-													   // realm role
-													   resource.TestCheckResourceAttrPair("keycloak_user.user", "id", "data.keycloak_user.user", "id"),
-													   resource.TestCheckResourceAttrPair("keycloak_user.user", "realm_id", "data.keycloak_user.user", "realm_id"),
-													   resource.TestCheckResourceAttrPair("keycloak_user.user", "username", "data.keycloak_user.user", "username"),
-													   testAccCheckDataKeycloakUser("data.keycloak_user.user"),
-				  ),
-					  },
-				  },
+		CheckDestroy: testAccCheckKeycloakRoleDestroy(),
+		Steps: []resource.TestStep{
+			{
+				Config: testDataSourceKeycloakUser_basic(realm, Username),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeycloakUserExists("keycloak_user.user"),
+					// realm role
+					resource.TestCheckResourceAttrPair("keycloak_user.user", "id", "data.keycloak_user.user", "id"),
+					resource.TestCheckResourceAttrPair("keycloak_user.user", "realm_id", "data.keycloak_user.user", "realm_id"),
+					resource.TestCheckResourceAttrPair("keycloak_user.user", "username", "data.keycloak_user.user", "username"),
+					testAccCheckDataKeycloakUser("data.keycloak_user.user"),
+				),
+			},
+		},
 	})
 }
 
